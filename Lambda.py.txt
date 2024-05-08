@@ -1,0 +1,39 @@
+import json
+import base64
+import boto3
+import datetime
+def lambda_handler(event, context):
+    output = []
+ 
+    for record in event['records']:
+        payload = base64.b64decode(record['data']).decode('utf-8')
+        
+        data = json.loads(payload)
+        
+        event_uuid = data['event_uuid']
+        event_name = data['event_name']
+        created_at = data['created_at']
+        created_datetime_iso = datetime.datetime.utcfromtimestamp(created_at).isoformat()
+        event_type=event_name.split(':')[0]
+        event_Subtype=event_name.split(':')[1]
+        
+        new_event = {
+                'event_uuid': event_uuid,
+                'event_name': event_name,
+                'created_at': created_at,
+                'created_datetime_iso': created_datetime_iso,
+                'event_type': event_type,
+                'event_Subtype': event_Subtype
+           
+                #'created_datetime': created_datetime_iso
+                # Add other fields related to the event type as needed
+        }
+
+        output_record = {
+            'recordId': record['recordId'],
+            'result': 'Ok',
+            'data': base64.b64encode(json.dumps(new_event).encode('utf-8')).decode('utf-8')
+        }
+        output.append(output_record)
+        
+    return {'records': output}
